@@ -28,11 +28,11 @@ public class BookService {
         return bookRepository.findById(id);
     }
 
-    public void updateBook(Book book) {
-        bookRepository.update(book);
+    public int updateBook(Book book) {
+        return bookRepository.update(book);
     }
 
-    public void deleteBookById(int id) {
-        bookRepository.delete(id);
+    public int deleteBookById(int id) {
+        return bookRepository.delete(id);
     }
 }

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Book List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Author ID</th>
+            </tr>
+        </thead>
+        <tbody id="bookTableBody">
+          
+        </tbody>
+        
+      
+ 
+    </table>
+    
+      <label for="bookId">Enter Book Id: </label>
+      <input type="number" id="bookId">
+      <button onclick="fetchBookById()">Search Book</button>
+      <h2>Book Details: </h2>
+      <p id="bookDetails"></p>
+      
+      <h1>Add a New Book</h1>
+    <form id="addBookForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title"><br><br>
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price"><br><br>
+
+        <label for="authorId">Author id:</label>
+        <input type="number" id="authorId" name="authorId"><br><br>
+
+        <button type="button" onclick="addBook()">Add Book</button>
+    </form>
+    <p id="responseMessage"></p>
+    
+    <label for="deleteBookId">Enter Book Id to delete: </label>
+      <input type="number" id="deleteBookId">
+      <button onclick="deleteById()">delete</button>
+      <p id="deleteMessage"></p>
+      
+      <h1>Update Book:</h1>
+<label for="updateBookId">Enter Book Id to Update:</label>
+<input type="number" id="updateBookId">
+<label for="updateBookTitle">Enter New Book Title:</label>
+<input type="text" id="updateBookTitle">
+<label for="updateBookPrice">Enter New Price:</label>
+<input type="number" id="updateBookPrice">
+<label for="updateAuthorId">Enter New Author Id:</label>
+<input type="number" id="updateAuthorId">
+<button onclick="updateBook()">Update Book</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/books');
+                const data = await response.json();
+                const tableBody = document.getElementById('bookTableBody');
+                data.forEach(book => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${book.id}</td>
+                        <td>${book.title}</td>
+                        <td>${book.price}</td>
+                        <td>${book.authorId}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        });
+        
+        function fetchBookById(){
+            const bookId = document.getElementById("bookId").value;
+            if(!bookId){
+                alert("Please enter some book id");
+                return;
+            }
+            fetch(`/api/books/${bookId}`)
+            .then(response => {
+                if(!response.ok){
+                    throw new Error("Book not found");
+                }
+                return response.json();
+            })
+            .then(book => {
+                document.getElementById("bookDetails").textContent = 
+                    `Title: ${book.title} || Price: ${book.price} || Author id: ${book.authorId}`;
+            })
+            .catch(error => {
+                document.getElementById("bookDetails").textContent = "Book Not Found";
+            });
+        }
+        
+        async function addBook() {
+            const title = document.getElementById("title").value;
+            const price = document.getElementById("price").value;
+            const authorId = document.getElementById("authorId").value;
+
+            if (!title || !price || !authorId) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            const book = {
+                title: title,
+                price: parseFloat(price),
+                authorId: parseInt(authorId),
+            };
+
+            try {
+                const response = await fetch("api/books", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(book)
+                });
+                
+                if (!response.ok) {
+                    throw new Error("Failed to add book");
+                }
+                
+                document.getElementById("responseMessage").textContent = "Book Added Successfully";
+            } catch (error) {
+                document.getElementById("responseMessage").textContent = "Error: " + error.message;
+            }
+        }
+        
+        function deleteById(){
+            const deleteBookId = document.getElementById("deleteBookId").value;
+            if(!deleteBookId){
+                alert("Please enter some book id");
+                return;
+            }
+            fetch(`/api/books/${deleteBookId}`,{method:"DELETE"})
+            .then(response => {
+                if(!response.ok){
+                    throw new Error("Book not found");
+                }
+                return response.text();
+            })
+            .then(book => {
+                document.getElementById("deleteMessage").textContent = 
+                    `Book deleted successfully !!!`;
+            })
+            .catch(error => {
+                document.getElementById("deleteMessage").textContent = "Book Not Found";
+            });
+        }
+        
+        function updateBook() {
+            const bookId = document.getElementById("updateBookId").value;
+            const title = document.getElementById("updateBookTitle").value;
+            const price = document.getElementById("updateBookPrice").value;
+            const authorId = document.getElementById("updateAuthorId").value;
+         
+            if (!bookId || !title || !price || !authorId) {
+                alert("Please fill in all fields.");
+                return;
+            }
+         
+            const book = {
+                title: title,
+                price: parseFloat(price),
+                author_id: parseInt(authorId)
+            };
+         
+            const url = `/api/books/${bookId}`;
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(book)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to update book!");
+                }
+                return response.text();
+            })
+            .then(data => {
+                alert("Book updated successfully!");
+            })
+            .catch(error => {
+                alert(error);
+            });
+        }
+
+    </script>
+</body>
+</html>
